@@ -104,3 +104,6 @@ htmlcov/
 .dmypy.json
 dmypy.json
 
+venv/
+.env
+# Environment files
