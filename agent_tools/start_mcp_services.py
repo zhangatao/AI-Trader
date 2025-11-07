@@ -33,7 +33,8 @@ class MCPServiceManager:
         # Service configurations
         self.service_configs = {
             "math": {"script": "tool_math.py", "name": "Math", "port": self.ports["math"]},
-            "search": {"script": "tool_jina_search.py", "name": "Search", "port": self.ports["search"]},
+            # "search": {"script": "tool_jina_search.py", "name": "Search", "port": self.ports["search"]},
+            "search": {"script": "tool_alphavantage_news.py", "name": "Search", "port": self.ports["search"]},
             "trade": {"script": "tool_trade.py", "name": "TradeTools", "port": self.ports["trade"]},
             "price": {"script": "tool_get_price_local.py", "name": "LocalPrices", "port": self.ports["price"]},
         }

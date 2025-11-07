@@ -15,6 +15,31 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 from tools.general_tools import get_config_value
 
+
+def get_market_type() -> str:
+    """
+    智能获取市场类型，支持多种检测方式：
+    1. 优先从配置中读取 MARKET
+    2. 如果未设置，则根据 LOG_PATH 推断（agent_data_astock -> cn, agent_data -> us）
+    3. 最后默认为 us
+    
+    Returns:
+        "cn" for A-shares market, "us" for US market
+    """
+    # 方式1: 从配置读取
+    market = get_config_value("MARKET", None)
+    if market in ["cn", "us"]:
+        return market
+    
+    # 方式2: 根据 LOG_PATH 推断
+    log_path = get_config_value("LOG_PATH", "./data/agent_data")
+    if "astock" in log_path.lower() or "a_stock" in log_path.lower():
+        return "cn"
+    
+    # 方式3: 默认为美股
+    return "us"
+
+
 all_nasdaq_100_symbols = [
     "NVDA",
     "MSFT",
@@ -324,14 +349,15 @@ def format_price_dict_with_names(
     return formatted_dict
 
 
-def get_yesterday_date(today_date: str) -> str:
+def get_yesterday_date(today_date: str, merged_path: Optional[str] = None, market: str = "us") -> str:
     """
     获取输入日期的上一个交易日或时间点。
     从 merged.jsonl 读取所有可用的交易时间，然后找到 today_date 的上一个时间。
     
     Args:
         today_date: 日期字符串，格式 YYYY-MM-DD 或 YYYY-MM-DD HH:MM:SS。
-        merged_path: 可选，自定义 merged.jsonl 路径；默认读取项目根目录下 data/merged.jsonl。
+        merged_path: 可选，自定义 merged.jsonl 路径；默认根据 market 参数读取对应市场的 merged.jsonl。
+        market: 市场类型，"us" 为美股，"cn" 为A股
 
     Returns:
         yesterday_date: 上一个交易日或时间点的字符串，格式与输入一致。
@@ -346,8 +372,7 @@ def get_yesterday_date(today_date: str) -> str:
     
     # 获取 merged.jsonl 文件路径
     if merged_path is None:
-        base_dir = Path(__file__).resolve().parents[1]
-        merged_file = base_dir / "data" / "merged.jsonl"
+        merged_file = get_merged_file_path(market)
     else:
         merged_file = Path(merged_path)
     
@@ -507,7 +532,7 @@ def get_yesterday_open_and_close_price(
     if not merged_file.exists():
         return buy_results, sell_results
 
-    yesterday_date = get_yesterday_date(today_date)
+    yesterday_date = get_yesterday_date(today_date, merged_path=merged_path, market=market)
 
     with merged_file.open("r", encoding="utf-8") as f:
         for line in f:
@@ -658,10 +683,13 @@ def get_today_init_position(today_date: str, signature: str) -> Dict[str, float]
         print(f"Position file {position_file} does not exist")
         return {}
     
-    yesterday_date = get_yesterday_date(today_date)
+    # 获取市场类型，智能判断
+    market = get_market_type()
+    yesterday_date = get_yesterday_date(today_date, market=market)
     
     max_id = -1
     latest_positions = {}
+    all_records = []
   
     with position_file.open("r", encoding="utf-8") as f:
         for line in f:
@@ -713,22 +741,33 @@ def get_latest_position(today_date: str, signature: str) -> Tuple[Dict[str, floa
     if not position_file.exists():
         return {}, -1
 
-    # Read all records and organize by date
-    all_records = []
+    # 获取市场类型，智能判断
+    market = get_market_type()
+    
+    # Step 1: 先查找当天的记录
+    max_id_today = -1
+    latest_positions_today: Dict[str, float] = {}
+    
     with position_file.open("r", encoding="utf-8") as f:
         for line in f:
             if not line.strip():
                 continue
             try:
                 doc = json.loads(line)
-                record_date = doc.get("date")
-                if record_date:
-                    all_records.append(doc)
+                if doc.get("date") == today_date:
+                    current_id = doc.get("id", -1)
+                    if current_id > max_id_today:
+                        max_id_today = current_id
+                        latest_positions_today = doc.get("positions", {})
             except Exception:
                 continue
-
-    # 当天没有记录，则回退到上一个交易日
-    prev_date = get_yesterday_date(today_date)
+    
+    # 如果当天有记录，直接返回
+    if max_id_today >= 0 and latest_positions_today:
+        return latest_positions_today, max_id_today
+    
+    # Step 2: 当天没有记录，则回退到上一个交易日
+    prev_date = get_yesterday_date(today_date, market=market)
     
     max_id_prev = -1
     latest_positions_prev: Dict[str, float] = {}
@@ -746,6 +785,26 @@ def get_latest_position(today_date: str, signature: str) -> Tuple[Dict[str, floa
                         latest_positions_prev = doc.get("positions", {})
             except Exception:
                 continue
+    
+    # 如果前一天也没有记录，尝试找文件中最新的记录（按日期和id排序）
+    if max_id_prev < 0 or not latest_positions_prev:
+        all_records = []
+        with position_file.open("r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                try:
+                    doc = json.loads(line)
+                    if doc.get("date") and doc.get("date") < today_date:
+                        all_records.append(doc)
+                except Exception:
+                    continue
+        
+        if all_records:
+            # 按日期和id排序，取最新的一条
+            all_records.sort(key=lambda x: (x.get("date", ""), x.get("id", 0)), reverse=True)
+            latest_positions_prev = all_records[0].get("positions", {})
+            max_id_prev = all_records[0].get("id", -1)
     
     return latest_positions_prev, max_id_prev
 

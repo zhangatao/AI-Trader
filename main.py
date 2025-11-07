@@ -2,7 +2,7 @@ import asyncio
 import os
 from datetime import datetime
 from pathlib import Path
-
+from pathlib import Path as _Path
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -28,6 +28,10 @@ AGENT_REGISTRY = {
     "BaseAgent_Hour": {
         "module": "agent.base_agent.base_agent_hour",
         "class": "BaseAgent_Hour"
+    },
+    "BaseAgentAStock": {
+        "module": "agent.base_agent_astock.base_agent_astock",
+        "class": "BaseAgentAStock"
     },
 }
 
@@ -209,24 +213,34 @@ async def main(config_path=None):
         print(f"🤖 Processing model: {model_name}")
         print(f"📝 Signature: {signature}")
         print(f"🔧 BaseModel: {basemodel}")
+            
+        # Initialize runtime configuration
+        # Use the shared config file from RUNTIME_ENV_PATH in .env
         
-        # Initialize per-signature runtime configuration
-        # Use a per-signature runtime env file that stores only TODAY_DATE and IF_TRADE
-        # Also export SIGNATURE via process env for tools that read it (but do not persist it)
-        from pathlib import Path as _Path
         project_root = _Path(__file__).resolve().parent
-        runtime_env_dir = project_root / "data" / "agent_data" / signature
-        runtime_env_dir.mkdir(parents=True, exist_ok=True)
-        runtime_env_path = runtime_env_dir / ".runtime_env.json"
-        os.environ["RUNTIME_ENV_PATH"] = str(runtime_env_path)
-        os.environ["SIGNATURE"] = signature
-        write_config_value("TODAY_DATE", END_DATE)
-        write_config_value("IF_TRADE", False)
-        write_config_value("MARKET", market)  # Store market type for other tools
-
+        
         # Get log path configuration
         log_path = log_config.get("log_path", "./data/agent_data")
-        write_config_value("LOG_PATH", log_path)  # Write to runtime config
+        
+        # Check position file to determine if this is a fresh start
+        position_file = project_root / log_path / signature / "position" / "position.jsonl"
+        
+        # If position file doesn't exist, reset config to start from INIT_DATE
+        if not position_file.exists():
+            # Clear the shared config file for fresh start
+            from tools.general_tools import _resolve_runtime_env_path
+            runtime_env_path = _resolve_runtime_env_path()
+            if os.path.exists(runtime_env_path):
+                os.remove(runtime_env_path)
+                print(f"🔄 Position file not found, cleared config for fresh start from {INIT_DATE}")
+        
+        # Write config values to shared config file (from .env RUNTIME_ENV_PATH)
+        write_config_value("SIGNATURE", signature)
+        write_config_value("IF_TRADE", False)
+        write_config_value("MARKET", market)
+        write_config_value("LOG_PATH", log_path)
+        
+        print(f"✅ Runtime config initialized: SIGNATURE={signature}, MARKET={market}")
 
         # Select stock symbols based on agent type and market
         # BaseAgentAStock has its own default symbols, only set for BaseAgent

@@ -13,40 +13,25 @@
 ## 🏆 Current Championship Leaderboard 🏆 
 [*Click Here: AI Live Trading*](https://ai4trade.ai)
 
-<div align="center">
-
-###  **Championship Period: (Last Update 2025/11/2)**
-
-| 🏆 Rank | 🤖 AI Model | 📈 Total Earnings | 
-|---------|-------------|----------------|
-| **🥇 1st** | **DeepSeek** | 🚀 +13.04% |
-| 🥈 2nd | MiniMax-M2 | 📊 +11.48% |
-| 🥉 3rd | Claude-3.7 | 📊 +7.03% |
-| 4th | GPT-5 | 📊 +7.63% |
-| Baseline | QQQ | 📊 +4.78% |
-| 5th | Qwen3-max | 📊 +2.87% |
-| 6th | Gemini-2.5-flash | 📊 +0.98% |
-
-### 🇨🇳 **A-Share Market (SSE 50) - Last Update: 2025/10/29**
-
-| 🏆 Rank | 🤖 AI Model | 📈 Total Earnings | 
-|---------|-------------|----------------|
-| **🥇 1st** | **MiniMax-M2** | 🚀 +2.81% |
-| 🥈 2nd(Baseline) | SSE-50 | 📊 +1.40% |
-| 🥉 3rd | Gemini-2.5-flash | 📊 +0.97% |
-| 4th | Claude-3.7 | 📊 -0.71% |
-| 5th | DeepSeek | 📊 -1.98% |
-| 6th | GPT-5 | 📊 -2.53% |
-
-### 📊 **Live Performance Dashboard**
-#### 🇺🇸 US Market (NASDAQ 100)
-![rank_us](assets/rankus.png)
-#### 🇨🇳 A-Share Market (SSE 50)
-![rank_cn](assets/rankcn.png)
-
-*Daily Performance Tracking of AI Models in US (NASDAQ 100) and China (SSE 50) Markets*
-
 </div>
+
+---
+## 🎉 Weekly Update
+
+We're excited to announce the following major updates completed this week:
+
+### 📈 Market Expansion
+- ✅ **A-Share Market Support** - Extended our trading capabilities to include Chinese A-share markets, expanding our global market coverage.
+
+### ⏰ Enhanced Trading Capabilities
+- ✅ **Hourly Trading Support** - We've upgraded from daily to hourly trading intervals, enabling more precise and responsive market participation with granular timing control.
+
+### 🎨 User Experience Improvements
+- ✅ **Live Trading Dashboard** - Introduced real-time visualization of all agent trading activities, providing comprehensive oversight of market operations.
+
+- ✅ **Agent Reasoning Display** - Implemented complete transparency into AI decision-making processes, featuring detailed reasoning chains that show how each trading decision is formed.
+
+- ✅ **Interactive Leaderboard** - Launched a dynamic performance ranking system with live updates, allowing users to track and compare agent performance in real-time.
 
 ---
 
@@ -58,22 +43,12 @@ You just need to submit a PR that includes at least: `./agent/{your_strategy}.py
 
 ---
 
+<div align="center">
+
 [🚀 Quick Start](#-quick-start) • [📈 Performance Analysis](#-performance-analysis) • [🛠️ Configuration Guide](#-configuration-guide) • [中文文档](README_CN.md)
 
 </div>
 
----
-## 🎉 Weekly Update (Oct 24-30, 2025)
-
-We're excited to announce the following major updates completed this week:
-
-### ⏰ Hourly Trading Support
-- ✅ **Hour-Level Precision Trading** - Upgraded from daily to hourly trading intervals for more granular market participation
-
-### 🎨 Comprehensive UI Optimization
-- ✅ **Live Trading Dashboard** - Real-time visualization of all agent trading activities
-- ✅ **Agent Reasoning Display** - Complete transparency into AI decision-making processes with full reasoning chains
-- ✅ **Interactive Leaderboard** - Dynamic performance rankings with live updates
 
 ## 🌟 Project Introduction
 
