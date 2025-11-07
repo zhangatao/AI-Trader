@@ -2,7 +2,6 @@ import os
 import sys
 import asyncio
 from datetime import datetime
-import json
 from pathlib import Path
 from dotenv import load_dotenv
 import argparse
@@ -11,6 +10,12 @@ load_dotenv()
 # Import tools and prompts
 from tools.general_tools import write_config_value
 from prompts.agent_prompt import all_nasdaq_100_symbols
+# Import new configuration management system
+from configs import (
+    initialize_config,
+    get_enabled_models,
+    validate,
+)
 
 
 # Agent class mapping table - for dynamic import and instantiation
@@ -68,30 +73,32 @@ def load_config(config_path=None):
     """
     Load configuration file from configs directory
     
+    Supports both JSON files and Python default configuration.
+    Falls back to default_config.py if no JSON file is specified.
+    
     Args:
-        config_path: Configuration file path, if None use default config
+        config_path: Configuration file path (JSON or Python config)
+                    If None, uses default config from configs/default_config.py
         
     Returns:
         dict: Configuration dictionary
     """
-    if config_path is None:
-        # Default configuration file path
-        config_path = Path(__file__).parent / "configs" / "default_config.json"
-    else:
-        config_path = Path(config_path)
-    
-    if not config_path.exists():
-        print(f"❌ Configuration file does not exist: {config_path}")
-        exit(1)
-    
     try:
-        with open(config_path, 'r', encoding='utf-8') as f:
-            config = json.load(f)
-        print(f"✅ Successfully loaded configuration file: {config_path}")
+        if config_path:
+            # Load from JSON file
+            config_path = Path(config_path)
+            if not config_path.exists():
+                print(f"❌ Configuration file does not exist: {config_path}")
+                exit(1)
+            
+            config = initialize_config(str(config_path))
+            print(f"✅ Successfully loaded configuration file: {config_path}")
+        else:
+            # Use default configuration from default_config.py
+            config = initialize_config()
+            print(f"✅ Using default configuration from configs/default_config.py")
+        
         return config
-    except json.JSONDecodeError as e:
-        print(f"❌ Configuration file JSON format error: {e}")
-        exit(1)
     except Exception as e:
         print(f"❌ Failed to load configuration file: {e}")
         exit(1)
@@ -198,6 +205,14 @@ async def main(config_path=None, only_signature: str | None = None):
     # Load configuration file
     config = load_config(config_path)
     
+    # Validate configuration
+    is_valid, errors = validate()
+    if not is_valid:
+        print("❌ Configuration validation failed:")
+        for error in errors:
+            print(f"   - {error}")
+        exit(1)
+    
     # Get Agent type
     agent_type = config.get("agent_type", "BaseAgent")
     try:
@@ -206,8 +221,10 @@ async def main(config_path=None, only_signature: str | None = None):
         print(str(e))
         exit(1)
 
-    INIT_DATE = config["date_range"]["init_date"]
-    END_DATE = config["date_range"]["end_date"]
+    # Get date range from configuration
+    date_range = config.get("date_range", {})
+    INIT_DATE = date_range.get("init_date", "2025-10-01")
+    END_DATE = date_range.get("end_date", "2025-10-21")
 
     # Environment variables can override dates in configuration file
     if os.getenv("INIT_DATE"):
@@ -234,12 +251,16 @@ async def main(config_path=None, only_signature: str | None = None):
         exit(1)
 
     # Get model list from configuration file (only select enabled models)
-    enabled_models = [
-        model for model in config["models"] 
-        if model.get("enabled", True)
-    ]
+    enabled_models = get_enabled_models()
+    if not enabled_models:
+        print("❌ No enabled models found in configuration")
+        exit(1)
+    
     if only_signature:
         enabled_models = [m for m in enabled_models if m.get("signature") == only_signature]
+        if not enabled_models:
+            print(f"❌ No model found with signature: {only_signature}")
+            exit(1)
 
     # Get agent configuration
     agent_config = config.get("agent_config", {})
@@ -264,14 +285,14 @@ async def main(config_path=None, only_signature: str | None = None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AI-Trader parallel runner")
-    parser.add_argument("config_path", nargs="?", default=None, help="Path to config JSON")
+    parser.add_argument("config_path", nargs="?", default=None, help="Path to config file (JSON or Python)")
     parser.add_argument("--signature", dest="signature", default=None, help="Run only this model signature")
     args = parser.parse_args()
 
     if args.config_path:
         print(f"📄 Using specified configuration file: {args.config_path}")
     else:
-        print(f"📄 Using default configuration file: configs/default_config.json")
+        print(f"📄 Using default configuration: configs/default_config.py")
     if args.signature:
         print(f"🎯 Filtering to single signature: {args.signature}")
 
