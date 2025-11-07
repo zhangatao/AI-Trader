@@ -3,7 +3,7 @@
   "market": "us",
   "date_range": {
     "init_date": "2025-10-01",
-    "end_date": "2025-10-21"
+    "end_date": "2025-10-03"
   },
   "models": [
     {
@@ -15,10 +15,10 @@
       "openai_api_key": "Optional: YOUR_OPENAI_API_KEY,you can write them in .env file" 
     },
     {
-      "name": "deepseek-chat-v3.1",
-      "basemodel": "deepseek/deepseek-chat-v3.1",
-      "signature": "deepseek-chat-v3.1",
-      "enabled": false
+      "name": "deepseek-chat",
+      "basemodel": "deepseek/deepseek-chat",
+      "signature": "deepseek-chat",
+      "enabled": true
     },
     {
       "name": "qwen3-max",
@@ -36,7 +36,7 @@
       "name": "gpt-5",
       "basemodel": "openai/gpt-5",
       "signature": "gpt-5",
-      "enabled": true
+      "enabled": false
     }
   ],
   "agent_config": {

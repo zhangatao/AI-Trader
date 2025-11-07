@@ -1,0 +1,27 @@
+{
+  "agent_type": "BaseAgent_Hour",
+  "date_range": {
+    "init_date": "2025-10-01 10:00:00",
+    "end_date": "2025-10-01 13:00:00"
+  },
+  "models": [
+    {
+      "name": "deepseek-chat",
+      "basemodel": "deepseek-chat",
+      "signature": "deepseek-trader",
+      "enabled": true,
+      "comment": "使用DeepSeek API进行AI交易"
+    }
+  ],
+  "agent_config": {
+    "max_steps": 15,
+    "max_retries": 2,
+    "base_delay": 1.0,
+    "initial_cash": 10000.0,
+    "comment": "max_steps降低到15可以加快运行速度，减少API调用次数"
+  },
+  "log_config": {
+    "log_path": "./data/agent_data"
+  }
+}
+

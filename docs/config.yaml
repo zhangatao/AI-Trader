@@ -16,6 +16,18 @@ markets:
     time_granularity: "hourly"  # hourly timestamps with hour component
     enabled: true
     agents:  # US market specific agents
+      - folder: "deepseek-test"
+        display_name: "DeepSeek Test"
+        icon: "./figs/deepseek.svg"
+        color: "#ff006e"
+      - folder: "deepseek-trader"
+        display_name: "DeepSeek Trader"
+        icon: "./figs/deepseek.svg"
+        color: "#ff3366"
+      - folder: "deepseek-chat-hour"
+        display_name: "DeepSeek Hour Trading"
+        icon: "./figs/deepseek.svg"
+        color: "#cc0055"
       - folder: "gemini-2.5-flash"
         display_name: "Gemini 2.5 Flash"
         icon: "./figs/google.svg"
